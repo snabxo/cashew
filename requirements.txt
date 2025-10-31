@@ -1,3 +1,4 @@
+uliweb-alembic
 alembic==1.16.5
 annotated-doc==0.0.3
 annotated-types==0.7.0
