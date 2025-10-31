@@ -1,21 +1,21 @@
-import sys
 from logging.config import fileConfig
-from pathlib import Path
-
-from alembic import context
 from sqlalchemy import engine_from_config, pool
-
-from config import config as app_config
-from database import Base
+from alembic import context
+import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from database import Base
+from models import UserDB, RefreshTokenDB, LoginAttemptDB
+from config import config as app_config
 
 # this is the Alembic Config object
 config = context.config
 
 # Override sqlalchemy.url with our config
-config.set_main_option("sqlalchemy.url", app_config.database_url)
+config.set_main_option('sqlalchemy.url', app_config.database_url)
 
 # Interpret the config file for Python logging
 if config.config_file_name is not None:
@@ -38,7 +38,7 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
