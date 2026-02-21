@@ -1,10 +1,15 @@
 from dotenv import load_dotenv
 from dataclasses import dataclass
+from pathlib import Path
 
 import os
 import secrets
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent
+
+# Load backend/.env first, then fall back to repository-root .env.
+load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR.parent / ".env")
 
 @dataclass
 class AuthConfig:

@@ -4,12 +4,12 @@ from alembic import context
 import sys
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Add repository root to path so `backend` package imports resolve.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from database import Base
-from models import UserDB, RefreshTokenDB, LoginAttemptDB
-from config import config as app_config
+from backend.database import Base
+from backend.models import UserDB, RefreshTokenDB, LoginAttemptDB
+from backend.config import config as app_config
 
 # this is the Alembic Config object
 config = context.config

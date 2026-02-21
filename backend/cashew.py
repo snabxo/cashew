@@ -8,9 +8,9 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr, validator
 from sqlalchemy.orm import Session
-from config import config
-from database import get_db
-from models import UserDB, RefreshTokenDB, LoginAttemptDB
+from backend.config import config
+from backend.database import get_db
+from backend.models import UserDB, RefreshTokenDB, LoginAttemptDB
 
 
 # Security

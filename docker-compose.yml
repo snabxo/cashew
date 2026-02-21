@@ -2,7 +2,6 @@ services:
   cashew-db:
     image: postgres:18-alpine
     container_name: cashew-db
-    platform: linux/arm64  # Optional: for Apple Silicon hosts
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: cashewdevpass123
@@ -11,6 +10,28 @@ services:
       - cashew-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cashew_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: cashew-backend
+    environment:
+      DATABASE_URL: postgresql://postgres:cashewdevpass123@cashew-db:5432/cashew_db
+      SECRET_KEY: ${SECRET_KEY:-change-this-for-production}
+    depends_on:
+      cashew-db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "alembic -c backend/alembic.ini upgrade head &&
+             uvicorn backend.cashew:app --host 0.0.0.0 --port 8000"
 
 volumes:
   cashew-data:
