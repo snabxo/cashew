@@ -6,12 +6,11 @@ from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
 from sqlalchemy.orm import Session
-from backend.config import config
-from backend.database import get_db
-from backend.models import UserDB, RefreshTokenDB, LoginAttemptDB
-
+from config import config
+from db.database import get_db
+from models import UserDB, LoginAttemptDB, RefreshTokenDB
 
 # Security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -24,7 +23,8 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
-    @validator('username')
+    @field_validator('username')
+    @classmethod
     def validate_username(cls, v):
         if len(v) < 3 or len(v) > 50:
             raise ValueError('Username must be between 3 and 50 characters')
@@ -32,7 +32,8 @@ class UserCreate(BaseModel):
             raise ValueError('Username can only contain letters, numbers, hyphens, and underscores')
         return v
 
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def validate_password(cls, v):
         if len(v) < config.min_password_length:
             raise ValueError(f'Password must be at least {config.min_password_length} characters')
@@ -70,8 +71,7 @@ class User(BaseModel):
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Utilities
@@ -191,11 +191,16 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
 
-    return User.from_orm(user)
+    return User.model_validate(user)
 
 
 # FastAPI App
 app = FastAPI(title="Production-Ready Authentication Service using Python with Postgres and Alembic")
+
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Cashew Authentication Service", "docs": "/docs"}
 
 
 @app.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)
@@ -210,7 +215,7 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return User.from_orm(db_user)
+    return User.model_validate(db_user)
 
 
 @app.post("/login", response_model=Token)
